@@ -25,6 +25,7 @@ export const fileService = {
           {"field": {"Name": "upload_date_c"}},
           {"field": {"Name": "task_c"}},
           {"field": {"Name": "file_data_c"}},
+          {"field": {"Name": "image_data_c"}},
           {"field": {"Name": "CreatedOn"}}
         ],
         where: [{
@@ -52,7 +53,7 @@ export const fileService = {
     }
   },
 
-  // Get all files
+// Get all files
   async getAll() {
     try {
       const apperClient = getApperClient();
@@ -70,6 +71,7 @@ export const fileService = {
           {"field": {"Name": "upload_date_c"}},
           {"field": {"Name": "task_c"}},
           {"field": {"Name": "file_data_c"}},
+          {"field": {"Name": "image_data_c"}},
           {"field": {"Name": "CreatedOn"}}
         ],
         orderBy: [{
@@ -92,7 +94,7 @@ export const fileService = {
   },
 
   // Get file by ID
-  async getById(fileId) {
+async getById(fileId) {
     try {
       if (!fileId) {
         console.error('File ID is required');
@@ -114,6 +116,7 @@ export const fileService = {
           {"field": {"Name": "upload_date_c"}},
           {"field": {"Name": "task_c"}},
           {"field": {"Name": "file_data_c"}},
+          {"field": {"Name": "image_data_c"}},
           {"field": {"Name": "CreatedOn"}}
         ]
       };
@@ -127,8 +130,8 @@ export const fileService = {
     }
   },
 
-  // Create file records for a task
-  async create(fileData, taskId) {
+// Create file records for a task
+  async create(fileData, taskId, fieldType = 'file_data_c') {
     try {
       if (!taskId) {
         throw new Error("Task ID is required for file creation");
@@ -149,15 +152,25 @@ export const fileService = {
         throw new Error("Failed to convert files to API format");
       }
 
-      const records = fileData.map((file, index) => ({
-        Name: file.Name || file.name || `File ${index + 1}`,
-        file_name_c: file.Name || file.name || `File ${index + 1}`,
-        file_size_c: file.Size || file.size || 0,
-        file_type_c: file.Type || file.type || 'unknown',
-        upload_date_c: new Date().toISOString(),
-        task_c: parseInt(taskId),
-        file_data_c: convertedFiles[index] || convertedFiles
-      }));
+      const records = fileData.map((file, index) => {
+        const record = {
+          Name: file.Name || file.name || `File ${index + 1}`,
+          file_name_c: file.Name || file.name || `File ${index + 1}`,
+          file_size_c: file.Size || file.size || 0,
+          file_type_c: file.Type || file.type || 'unknown',
+          upload_date_c: new Date().toISOString(),
+          task_c: parseInt(taskId)
+        };
+
+        // Set the appropriate field based on type
+        if (fieldType === 'image_data_c') {
+          record.image_data_c = convertedFiles[index] || convertedFiles;
+        } else {
+          record.file_data_c = convertedFiles[index] || convertedFiles;
+        }
+
+        return record;
+      });
 
       const params = { records };
 
@@ -188,7 +201,8 @@ export const fileService = {
         }
 
         if (successful.length > 0) {
-          toast.success(`${successful.length} file(s) uploaded successfully`);
+          const fileType = fieldType === 'image_data_c' ? 'image' : 'file';
+          toast.success(`${successful.length} ${fileType}(s) uploaded successfully`);
         }
 
         return successful.map(r => r.data);

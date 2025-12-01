@@ -14,6 +14,7 @@ const [title, setTitle] = useState("")
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState([])
+  const [uploadedImages, setUploadedImages] = useState([])
   const validateForm = () => {
     const newErrors = {}
     
@@ -64,41 +65,68 @@ setIsSubmitting(true)
       })
 
       // Handle file uploads if any files were attached
-      if (uploadedFiles.length > 0 && newTask?.records?.[0]?.Id) {
+// Handle file uploads after task creation
+      if (newTask?.records?.[0]?.Id) {
         const taskId = newTask.records[0].Id;
-        let fileData = uploadedFiles;
+        const { fileService } = await import('@/services/api/fileService');
         
-        // Try to get files from SDK if available
-        if (window.ApperSDK?.ApperFileUploader?.FileField?.getFiles) {
-          try {
-            const sdkFiles = await window.ApperSDK.ApperFileUploader.FileField.getFiles('file_data_c');
-            console.log("sdkFiles:", sdkFiles)
-            if (sdkFiles && sdkFiles.length > 0) {
-              fileData = sdkFiles;
+        // Handle regular files
+        if (uploadedFiles.length > 0) {
+          let fileData = uploadedFiles;
+          
+          // Try to get files from SDK if available
+          if (window.ApperSDK?.ApperFileUploader?.FileField?.getFiles) {
+            try {
+              const sdkFiles = await window.ApperSDK.ApperFileUploader.FileField.getFiles('file_data_c');
+              if (sdkFiles && sdkFiles.length > 0) {
+                fileData = sdkFiles;
+              }
+            } catch (getError) {
+              console.warn('Could not get files from SDK, using uploaded files:', getError);
             }
-          } catch (getError) {
-            console.warn('Could not get files from SDK, using uploaded files:', getError);
+          }
+          
+          if (fileData.length > 0) {
+            await fileService.create(fileData, taskId, 'file_data_c');
           }
         }
-        if (fileData.length > 0) {
-          const { fileService } = await import('@/services/api/fileService');
-          await fileService.create(fileData, taskId);
+        
+        // Handle image files separately
+        if (uploadedImages.length > 0) {
+          let imageData = uploadedImages;
+          
+          // Try to get images from SDK if available
+          if (window.ApperSDK?.ApperFileUploader?.FileField?.getFiles) {
+            try {
+              const sdkImages = await window.ApperSDK.ApperFileUploader.FileField.getFiles('image_data_c');
+              if (sdkImages && sdkImages.length > 0) {
+                imageData = sdkImages;
+              }
+            } catch (getError) {
+              console.warn('Could not get images from SDK, using uploaded images:', getError);
+            }
+          }
+          
+          if (imageData.length > 0) {
+            await fileService.create(imageData, taskId, 'image_data_c');
+          }
         }
       }
-
       // Reset form
       setTitle("")
       setDescription("")
       setPriority("medium")
-      setUploadedFiles([])
+setUploadedFiles([])
+      setUploadedImages([])
       setErrors({})
       
-      // Clear file field
+      // Clear both file fields
       if (window.ApperSDK?.ApperFileUploader) {
         try {
           await window.ApperSDK.ApperFileUploader.FileField.clearField('file_data_c');
+          await window.ApperSDK.ApperFileUploader.FileField.clearField('image_data_c');
         } catch (clearError) {
-          console.error('Error clearing file field:', clearError);
+          console.error('Error clearing file fields:', clearError);
         }
       }
     } catch (error) {
@@ -182,11 +210,31 @@ return (
             </div>
           </div>
 
+{/* Image Upload Section */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              <ApperIcon name="Image" className="w-4 h-4 inline mr-2" />
+              Images
+            </label>
+            <ApperFileFieldComponent
+              elementId="task-images"
+              config={{
+                fieldKey: 'image_data_c',
+                fieldName: 'image_data_c',
+                tableName: 'file_c',
+                apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+                apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY,
+                existingFiles: uploadedImages,
+                fileCount: uploadedImages.length
+              }}
+            />
+          </div>
+
           {/* File Upload Section */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-slate-700">
               <ApperIcon name="Paperclip" className="w-4 h-4 inline mr-2" />
-              Attachments
+              Files
             </label>
             <ApperFileFieldComponent
               elementId="task-files"
