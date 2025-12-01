@@ -79,9 +79,8 @@ setIsSubmitting(true)
             console.warn('Could not get files from SDK, using uploaded files:', getError);
           }
         }
-        
+        console.log("files:", fileData)
         if (fileData.length > 0) {
-          console.log("files", fileData)
           const { fileService } = await import('@/services/api/fileService');
           await fileService.create(fileData, taskId);
         }
