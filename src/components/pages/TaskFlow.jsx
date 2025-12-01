@@ -37,17 +37,18 @@ const TaskFlow = () => {
     loadTasks();
   }, []);
 
-  const handleAddTask = async (taskData) => {
+const handleAddTask = async (taskData) => {
     console.log("taskData", taskData)
+    let newTask = null;
     try {
-      const newTask = await taskService.create(taskData);
+      newTask = await taskService.create(taskData);
       setTasks(prev => [newTask, ...prev]);
       toast.success("Task added successfully!");
     } catch (err) {
       toast.error("Failed to add task");
       console.error("Error adding task:", err);
     }
-    return newTask
+    return newTask;
   };
 
   const handleUpdateTask = async (id, updates) => {
