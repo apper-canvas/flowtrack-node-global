@@ -72,6 +72,7 @@ setIsSubmitting(true)
         if (window.ApperSDK?.ApperFileUploader?.FileField?.getFiles) {
           try {
             const sdkFiles = await window.ApperSDK.ApperFileUploader.FileField.getFiles('file_data_c');
+            console.log("sdkFiles:", sdkFiles)
             if (sdkFiles && sdkFiles.length > 0) {
               fileData = sdkFiles;
             }
@@ -79,7 +80,6 @@ setIsSubmitting(true)
             console.warn('Could not get files from SDK, using uploaded files:', getError);
           }
         }
-        console.log("files:", fileData)
         if (fileData.length > 0) {
           const { fileService } = await import('@/services/api/fileService');
           await fileService.create(fileData, taskId);
