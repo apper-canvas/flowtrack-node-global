@@ -1,10 +1,10 @@
-import { useState } from "react"
-import { motion } from "framer-motion"
-import Button from "@/components/atoms/Button"
-import Input from "@/components/atoms/Input"
-import Select from "@/components/atoms/Select"
-import Textarea from "@/components/atoms/Textarea"
-import ApperIcon from "@/components/ApperIcon"
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import ApperIcon from "@/components/ApperIcon";
+import Textarea from "@/components/atoms/Textarea";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
 
 const TaskForm = ({ onAddTask }) => {
   const [title, setTitle] = useState("")
@@ -17,11 +17,31 @@ const TaskForm = ({ onAddTask }) => {
     const newErrors = {}
     
     if (!title.trim()) {
-      newErrors.title = "Task title is required"
+      newErrors.title = "Title is required"
+    } else if (title.trim().length < 3) {
+      newErrors.title = "Title must be at least 3 characters"
     }
     
     return newErrors
   }
+
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case "high": return "AlertCircle"
+      case "medium": return "Clock"
+      case "low": return "Minus"
+      default: return "Clock"
+    }
+  }
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "high": return "text-error-500"
+      case "medium": return "text-warning-500" 
+      case "low": return "text-success-500"
+      default: return "text-slate-500"
+    }
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -35,12 +55,11 @@ const TaskForm = ({ onAddTask }) => {
     
     try {
       await onAddTask({
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        status: "active",
-        createdAt: new Date().toISOString(),
-        completedAt: null
+        title_c: title.trim(),
+        description_c: description.trim(),
+        priority_c: priority,
+        status_c: "active",
+        completed_at_c: null
       })
       
       // Reset form
@@ -54,26 +73,7 @@ const TaskForm = ({ onAddTask }) => {
       setIsSubmitting(false)
     }
   }
-
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case "high": return "AlertTriangle"
-      case "medium": return "AlertCircle"
-      case "low": return "Minus"
-      default: return "AlertCircle"
-    }
-  }
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high": return "text-error-500"
-      case "medium": return "text-warning-500"
-      case "low": return "text-slate-500"
-      default: return "text-slate-500"
-    }
-  }
-
-  return (
+return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -148,7 +148,7 @@ const TaskForm = ({ onAddTask }) => {
             </div>
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-4 border-t border-slate-200">
             <Button
               type="submit"
               disabled={isSubmitting}

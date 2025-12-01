@@ -1,109 +1,110 @@
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { toast } from "react-toastify"
-import TaskForm from "@/components/organisms/TaskForm"
-import TaskList from "@/components/organisms/TaskList"
-import FilterControls from "@/components/molecules/FilterControls"
-import SortControls from "@/components/molecules/SortControls"
-import CompletionAnimation from "@/components/organisms/CompletionAnimation"
-import Empty from "@/components/ui/Empty"
-import { taskService } from "@/services/api/taskService"
-import ApperIcon from "@/components/ApperIcon"
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "react-toastify";
+import { taskService } from "@/services/api/taskService";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import TaskForm from "@/components/organisms/TaskForm";
+import CompletionAnimation from "@/components/organisms/CompletionAnimation";
+import TaskList from "@/components/organisms/TaskList";
+import FilterControls from "@/components/molecules/FilterControls";
+import SortControls from "@/components/molecules/SortControls";
 
 const TaskFlow = () => {
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [filter, setFilter] = useState("all")
-  const [sortBy, setSortBy] = useState("created")
-  const [showCompletion, setShowCompletion] = useState(false)
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("created");
+  const [showCompletion, setShowCompletion] = useState(false);
 
   const loadTasks = async () => {
     try {
-      setError("")
-      setLoading(true)
-      const data = await taskService.getAll()
-      setTasks(data)
+      setError("");
+      setLoading(true);
+      const data = await taskService.getAll();
+      setTasks(data);
     } catch (err) {
-      setError("Failed to load tasks. Please try again.")
-      console.error("Error loading tasks:", err)
+      setError("Failed to load tasks. Please try again.");
+      console.error("Error loading tasks:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadTasks()
-  }, [])
+    loadTasks();
+  }, []);
 
   const handleAddTask = async (taskData) => {
     try {
-      const newTask = await taskService.create(taskData)
-      setTasks(prev => [newTask, ...prev])
-      toast.success("Task added successfully!")
+      const newTask = await taskService.create(taskData);
+      setTasks(prev => [newTask, ...prev]);
+      toast.success("Task added successfully!");
     } catch (err) {
-      toast.error("Failed to add task")
-      console.error("Error adding task:", err)
+      toast.error("Failed to add task");
+      console.error("Error adding task:", err);
     }
-  }
+  };
 
   const handleUpdateTask = async (id, updates) => {
     try {
-      const updatedTask = await taskService.update(id, updates)
-      setTasks(prev => prev.map(task => task.Id === id ? updatedTask : task))
+      const updatedTask = await taskService.update(id, updates);
+      setTasks(prev => prev.map(task => task.Id === id ? updatedTask : task));
       
-      if (updates.status === "completed") {
-        setShowCompletion(true)
-        setTimeout(() => setShowCompletion(false), 1000)
-        toast.success("Task completed! Great job! 🎉")
+      if (updates.status_c === "completed") {
+        setShowCompletion(true);
+        setTimeout(() => setShowCompletion(false), 1000);
+        toast.success("Task completed! Great job! 🎉");
       } else {
-        toast.success("Task updated successfully!")
+        toast.success("Task updated successfully!");
       }
     } catch (err) {
-      toast.error("Failed to update task")
-      console.error("Error updating task:", err)
+      toast.error("Failed to update task");
+      console.error("Error updating task:", err);
     }
-  }
+  };
 
   const handleDeleteTask = async (id) => {
     try {
-      await taskService.delete(id)
-      setTasks(prev => prev.filter(task => task.Id !== id))
-      toast.success("Task deleted successfully")
+      await taskService.delete(id);
+      setTasks(prev => prev.filter(task => task.Id !== id));
+      toast.success("Task deleted successfully");
     } catch (err) {
-      toast.error("Failed to delete task")
-      console.error("Error deleting task:", err)
+      toast.error("Failed to delete task");
+      console.error("Error deleting task:", err);
     }
-  }
+  };
 
   const filteredAndSortedTasks = () => {
-    let filtered = tasks
+    let filtered = tasks;
 
     // Apply filter
     if (filter === "active") {
-      filtered = tasks.filter(task => task.status === "active")
+      filtered = tasks.filter(task => task.status_c === "active");
     } else if (filter === "completed") {
-      filtered = tasks.filter(task => task.status === "completed")
+      filtered = tasks.filter(task => task.status_c === "completed");
     }
 
     // Apply sort
     return filtered.sort((a, b) => {
       if (sortBy === "priority") {
-        const priorityOrder = { high: 3, medium: 2, low: 1 }
-        return priorityOrder[b.priority] - priorityOrder[a.priority]
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority_c] - priorityOrder[a.priority_c];
       } else if (sortBy === "created") {
-        return new Date(b.createdAt) - new Date(a.createdAt)
+        return new Date(b.CreatedOn) - new Date(a.CreatedOn);
       }
-      return 0
-    })
-  }
+      return 0;
+    });
+  };
 
-  const displayTasks = filteredAndSortedTasks()
-  const taskStats = {
+  const displayTasks = filteredAndSortedTasks();
+const taskStats = {
     total: tasks.length,
-    active: tasks.filter(t => t.status === "active").length,
-    completed: tasks.filter(t => t.status === "completed").length,
-  }
+    active: tasks.filter(t => t.status_c === "active").length,
+    completed: tasks.filter(t => t.status_c === "completed").length,
+  };
 
   if (loading) {
     return (
@@ -120,7 +121,7 @@ const TaskFlow = () => {
           <p className="text-slate-600 font-medium">Loading your tasks...</p>
         </motion.div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -146,7 +147,7 @@ const TaskFlow = () => {
           </div>
         </motion.div>
       </div>
-    )
+    );
   }
 
   return (
@@ -204,7 +205,7 @@ const TaskFlow = () => {
           <TaskForm onAddTask={handleAddTask} />
         </motion.div>
 
-        {/* Filters and Sort */}
+        {/* Controls */}
         {tasks.length > 0 && (
           <motion.div 
             className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4"
@@ -234,7 +235,11 @@ const TaskFlow = () => {
               onDeleteTask={handleDeleteTask}
             />
           ) : tasks.length === 0 ? (
-            <Empty />
+            <Empty
+              icon="CheckSquare"
+              title="No tasks yet"
+              description="Create your first task to get started with FlowTrack"
+            />
           ) : (
             <div className="text-center py-12">
               <div className="w-20 h-20 mx-auto bg-slate-200 rounded-full flex items-center justify-center mb-4">
@@ -251,14 +256,14 @@ const TaskFlow = () => {
             </div>
           )}
         </motion.div>
+        
+        {/* Completion Animation */}
+        <AnimatePresence>
+          {showCompletion && <CompletionAnimation />}
+        </AnimatePresence>
       </div>
-
-      {/* Completion Animation */}
-      <AnimatePresence>
-        {showCompletion && <CompletionAnimation />}
-      </AnimatePresence>
     </div>
-  )
-}
+  );
+};
 
-export default TaskFlow
+export default TaskFlow;
