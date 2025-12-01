@@ -7,5 +7,7 @@ export const store = configureStore({
   },
 })
 
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
+// TypeScript type exports removed - not supported in JavaScript files
+// For type safety, convert this file to TypeScript (.ts) and use:
+// export type RootState = ReturnType<typeof store.getState>
+// export type AppDispatch = typeof store.dispatch
