@@ -81,6 +81,7 @@ setIsSubmitting(true)
         }
         
         if (fileData.length > 0) {
+          console.log("files", fileData)
           const { fileService } = await import('@/services/api/fileService');
           await fileService.create(fileData, taskId);
         }
